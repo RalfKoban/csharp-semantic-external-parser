@@ -17,7 +17,7 @@ If you can repeat the issue then please provide a sample to make it easier for m
 
 Please do not hijack unrelated issues, I would rather you create a new issue than add noise to an unrelated issue.
 
-## Supported formats
-_**Note:** A semantic parser for .NET resource files (.resx) can be found [here](https://github.com/RalfKoban/resx-semantic-external-parser)._
-_**Note:** A semantic parser for XML files in various formats can be found [here](https://github.com/RalfKoban/xml-semantic-external-parser)._
+## Notes
+- _A semantic parser for .NET resource files (.resx) can be found [here](https://github.com/RalfKoban/resx-semantic-external-parser)._
+- _A semantic parser for XML files in various formats can be found [here](https://github.com/RalfKoban/xml-semantic-external-parser)._
 
