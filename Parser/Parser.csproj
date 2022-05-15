@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net472</TargetFramework>
 	<RootNamespace>MiKoSolutions.SemanticParsers.CSharp</RootNamespace>
+	<AssemblyName>CSharpSemanticParser</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
