@@ -14,5 +14,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp.Yaml
 
         [YamlMember(Alias = "children", Order = 6)]
         public List<Node> Children { get; } = new List<Node>();
+
+        public override CharacterSpan GetTotalSpan() => new CharacterSpan(HeaderSpan.Start, FooterSpan.End);
     }
 }

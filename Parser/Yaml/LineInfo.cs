@@ -10,7 +10,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp.Yaml
     {
         public static readonly LineInfo None = new LineInfo(0, -1);
 
-        public LineInfo(LinePosition linePosition) : this(linePosition.Line, linePosition.Character)
+        public LineInfo(LinePosition linePosition) : this(linePosition.Line + 1, linePosition.Character) // Roslyn line is zero based, but external parsers lines are 1 based, hence we have to add a 1
         {
         }
 

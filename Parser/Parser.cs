@@ -58,24 +58,14 @@ namespace MiKoSolutions.SemanticParsers.CSharp
 
             var rootNode = syntaxTree.GetRoot();
 
-            var root = new Container
-                           {
-                               Name = "Compilation unit",
-                               HeaderSpan = CharacterSpan.None,
-                               FooterSpan = CharacterSpan.None,
-                               LocationSpan = new LocationSpan(rootNode),
-                           };
-
-            AddChildren(root, rootNode);
-
             var file = new File
                            {
                                Name = filePath,
-                               LocationSpan = root.LocationSpan,
+                               LocationSpan = new LocationSpan(new LineInfo(1, 0), new LineInfo(rootNode.GetLocation().GetLineSpan().EndLinePosition)), // line span always starts at 1,0
                                FooterSpan = CharacterSpan.None, // there is no footer
                            };
 
-            file.Children.Add(root);
+            AddChildren(file, rootNode);
 
             return file;
         }
@@ -107,8 +97,8 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                                     Type = GetType(syntax),
                                     Name = GetName(syntax),
                                     LocationSpan = new LocationSpan(syntax),
-                                    HeaderSpan = new CharacterSpan(), // TODO RKN
-                                    FooterSpan = new CharacterSpan(), //syntax.GetTrailingTrivia() // TODO RKN,
+                                    HeaderSpan = GetHeaderSpan(syntax),
+                                    FooterSpan = GetFooterSpan(syntax),
                                 };
 
             AddChildren(container, syntax);
@@ -116,6 +106,33 @@ namespace MiKoSolutions.SemanticParsers.CSharp
             return container;
         }
 
+        private static CharacterSpan GetHeaderSpan(SyntaxNode syntax)
+        {
+            // TODO RKN: fix header span
+            switch (syntax)
+            {
+                case BaseNamespaceDeclarationSyntax ns: return new CharacterSpan(ns.Name);
+                case BaseTypeDeclarationSyntax t: return new CharacterSpan(t.GetFirstToken(), t.OpenBraceToken);
+
+                default:
+                    return new CharacterSpan();
+            }
+        }
+
+        private static CharacterSpan GetFooterSpan(SyntaxNode syntax)
+        {
+            // TODO RKN: fix footer span
+            switch (syntax)
+            {
+                case NamespaceDeclarationSyntax ns: return new CharacterSpan(ns.CloseBraceToken);
+                case FileScopedNamespaceDeclarationSyntax ns: return new CharacterSpan(ns.SemicolonToken);
+                case BaseTypeDeclarationSyntax t: return new CharacterSpan(t.CloseBraceToken);
+
+                default:
+                    return new CharacterSpan();
+            }
+        }
+    
         private static TerminalNode TerminalNode(SyntaxNode syntax) => new TerminalNode
                                                                            {
                                                                                Type = GetType(syntax),
@@ -152,6 +169,13 @@ namespace MiKoSolutions.SemanticParsers.CSharp
             return TypeMapping.TryGetValue(type, out var result)
                     ? result
                     : type.Name;
+        }
+
+        private static void AddChildren(File file, SyntaxNode syntax)
+        {
+            var children = syntax.ChildNodes().Select(ParseNode).Where(_ => _ != null);
+
+            file.Children.AddRange(children);
         }
 
         private static void AddChildren(Container container, SyntaxNode syntax)

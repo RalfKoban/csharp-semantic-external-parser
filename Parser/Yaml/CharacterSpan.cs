@@ -8,7 +8,15 @@ namespace MiKoSolutions.SemanticParsers.CSharp.Yaml
     {
         public static readonly CharacterSpan None = new CharacterSpan(0, -1);
 
-        public CharacterSpan(SyntaxNode node) : this(node.FullSpan.Start, node.FullSpan.End)
+        public CharacterSpan(SyntaxNode node) : this(node.Span.Start, node.Span.End -1) // Roslyn reports that the end of the full span is the start of the next span, hence we have to subtract 1 from the end
+        {
+        }
+
+        public CharacterSpan(SyntaxToken token) : this(token.Span.Start, token.Span.End - 1) // Roslyn reports that the end of the full span is the start of the next span, hence we have to subtract 1 from the end
+        {
+        }
+
+        public CharacterSpan(SyntaxToken start, SyntaxToken end) : this(start.Span.Start, end.Span.End - 1) // Roslyn reports that the end of the full span is the start of the next span, hence we have to subtract 1 from the end
         {
         }
 

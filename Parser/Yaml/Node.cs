@@ -29,5 +29,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp.Yaml
 
         [YamlMember(Alias = "locationSpan", Order = 3)]
         public LocationSpan LocationSpan { get; set; }
+
+        public abstract CharacterSpan GetTotalSpan();
     }
 }

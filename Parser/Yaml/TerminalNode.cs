@@ -6,5 +6,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp.Yaml
     {
         [YamlMember(Alias = "span", Order = 4)]
         public CharacterSpan Span { get; set; }
+
+        public override CharacterSpan GetTotalSpan() => Span;
     }
 }
