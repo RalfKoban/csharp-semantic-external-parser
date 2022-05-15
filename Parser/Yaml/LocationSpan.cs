@@ -8,12 +8,18 @@ namespace MiKoSolutions.SemanticParsers.CSharp.Yaml
     [DebuggerDisplay("Start: {Start}, End: {End}")]
     public struct LocationSpan : IEquatable<LocationSpan>
     {
-        public LocationSpan(SyntaxNode node)
+        public LocationSpan(SyntaxNode node) : this(node.GetLocation().GetLineSpan())
         {
-            var span = node.GetLocation().GetLineSpan();
+        }
 
-            Start = new LineInfo(span.StartLinePosition);
-            End = new LineInfo(span.EndLinePosition);
+        public LocationSpan(FileLinePositionSpan span) : this(new LineInfo(span.StartLinePosition), new LineInfo(span.EndLinePosition))
+        {
+        }
+
+        public LocationSpan(LineInfo start, LineInfo end)
+        {
+            Start = start;
+            End = end;
         }
 
         public LineInfo Start { get; }

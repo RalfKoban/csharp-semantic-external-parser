@@ -9,8 +9,6 @@ using Microsoft.CodeAnalysis.Text;
 
 using MiKoSolutions.SemanticParsers.CSharp.Yaml;
 
-using Container = MiKoSolutions.SemanticParsers.CSharp.Yaml.Container;
-using File = MiKoSolutions.SemanticParsers.CSharp.Yaml.File;
 using SystemFile = System.IO.File;
 
 namespace MiKoSolutions.SemanticParsers.CSharp
@@ -19,22 +17,25 @@ namespace MiKoSolutions.SemanticParsers.CSharp
     {
         private static readonly MetadataReference CorlibReference = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
 
-        private static readonly Dictionary<Type, string> TypeMapping = new Dictionary<Type, string>()
-        {
-            { typeof(UsingDirectiveSyntax), "using" },
-            { typeof(NamespaceDeclarationSyntax), "namespace" },
-            { typeof(ClassDeclarationSyntax), "class" },
-            { typeof(StructDeclarationSyntax), "struct" },
-            { typeof(InterfaceDeclarationSyntax), "interface" },
-            { typeof(EnumDeclarationSyntax), "enum" },
-            { typeof(ConstructorDeclarationSyntax), "constructor" },
-            { typeof(MethodDeclarationSyntax), "method" },
-            { typeof(IndexerDeclarationSyntax), "indexer" },
-            { typeof(PropertyDeclarationSyntax), "property" },
-            { typeof(EventDeclarationSyntax), "event" },
-            { typeof(FieldDeclarationSyntax), "field" },
-            { typeof(AttributeListSyntax), "attribute" },
-        };
+        private static readonly Dictionary<Type, string> TypeMapping = new Dictionary<Type, string>
+                                                                           {
+                                                                               { typeof(AttributeListSyntax), TypeNames.AttributeList },
+                                                                               { typeof(ClassDeclarationSyntax), TypeNames.ClassDeclaration },
+                                                                               { typeof(ConstructorDeclarationSyntax), TypeNames.ConstructorDeclaration },
+                                                                               { typeof(EnumDeclarationSyntax), TypeNames.EnumDeclaration },
+                                                                               { typeof(EnumMemberDeclarationSyntax), TypeNames.EnumMemberDeclaration },
+                                                                               { typeof(EventDeclarationSyntax), TypeNames.EventDeclaration },
+                                                                               { typeof(EventFieldDeclarationSyntax), TypeNames.EventFieldDeclaration },
+                                                                               { typeof(FieldDeclarationSyntax), TypeNames.FieldDeclaration },
+                                                                               { typeof(FileScopedNamespaceDeclarationSyntax), TypeNames.FileScopedNamespaceDeclaration },
+                                                                               { typeof(IndexerDeclarationSyntax), TypeNames.IndexerDeclaration },
+                                                                               { typeof(InterfaceDeclarationSyntax), TypeNames.InterfaceDeclaration },
+                                                                               { typeof(MethodDeclarationSyntax), TypeNames.MethodDeclaration },
+                                                                               { typeof(NamespaceDeclarationSyntax), TypeNames.NamespaceDeclaration },
+                                                                               { typeof(PropertyDeclarationSyntax), TypeNames.PropertyDeclaration },
+                                                                               { typeof(StructDeclarationSyntax), TypeNames.StructDeclaration },
+                                                                               { typeof(UsingDirectiveSyntax), TypeNames.UsingDirective },
+                                                                           };
 
         // we have issues with UTF-8 encodings in files that should have an encoding='iso-8859-1'
         public static File Parse(string filePath, string encoding)
@@ -42,7 +43,12 @@ namespace MiKoSolutions.SemanticParsers.CSharp
             var encodingToUse = Encoding.GetEncoding(encoding);
             var source = SystemFile.ReadAllText(filePath, encodingToUse);
 
-            return ParseCore(source, filePath);
+            var file = ParseCore(source, filePath);
+
+            // Fill gaps in between nodes so that each character inside the file is considered to be part of any container or terminal node
+            GapFiller.Fill(file, CharacterPositionFinder.CreateFrom(filePath, encodingToUse));
+
+            return file;
         }
 
         public static File ParseCore(string source, string filePath = null)
@@ -51,22 +57,23 @@ namespace MiKoSolutions.SemanticParsers.CSharp
             var syntaxTree = document.GetSyntaxTreeAsync().Result;
 
             var rootNode = syntaxTree.GetRoot();
+
             var root = new Container
-            {
-                Name = "Compilation unit",
-                HeaderSpan = CharacterSpan.None,
-                FooterSpan = CharacterSpan.None,
-                LocationSpan = new LocationSpan(rootNode)
-            };
+                           {
+                               Name = "Compilation unit",
+                               HeaderSpan = CharacterSpan.None,
+                               FooterSpan = CharacterSpan.None,
+                               LocationSpan = new LocationSpan(rootNode),
+                           };
 
             AddChildren(root, rootNode);
 
             var file = new File
-            {
-                Name = filePath,
-                LocationSpan = root.LocationSpan,
-                FooterSpan = CharacterSpan.None, // there is no footer
-            };
+                           {
+                               Name = filePath,
+                               LocationSpan = root.LocationSpan,
+                               FooterSpan = CharacterSpan.None, // there is no footer
+                           };
 
             file.Children.Add(root);
 
@@ -85,6 +92,9 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                 case MemberDeclarationSyntax _:
                     return TerminalNode(node);
 
+                case AttributeListSyntax _:
+                    return TerminalNode(node);
+
                 default:
                     return null;
             }
@@ -93,28 +103,26 @@ namespace MiKoSolutions.SemanticParsers.CSharp
         private static Container Container(SyntaxNode syntax)
         {
             var container = new Container
-            {
-                Type = GetType(syntax),
-                Name = GetName(syntax),
-                LocationSpan = new LocationSpan(syntax),
-                HeaderSpan = new CharacterSpan(), // TODO RKN
-                FooterSpan = new CharacterSpan(), //syntax.GetTrailingTrivia() // TODO RKN,
-            };
+                                {
+                                    Type = GetType(syntax),
+                                    Name = GetName(syntax),
+                                    LocationSpan = new LocationSpan(syntax),
+                                    HeaderSpan = new CharacterSpan(), // TODO RKN
+                                    FooterSpan = new CharacterSpan(), //syntax.GetTrailingTrivia() // TODO RKN,
+                                };
 
             AddChildren(container, syntax);
+
             return container;
         }
 
-        private static TerminalNode TerminalNode(SyntaxNode syntax)
-        {
-            return new TerminalNode
-            {
-                Type = GetType(syntax),
-                Name = GetName(syntax),
-                LocationSpan = new LocationSpan(syntax),
-                Span = new CharacterSpan(syntax),
-            };
-        }
+        private static TerminalNode TerminalNode(SyntaxNode syntax) => new TerminalNode
+                                                                           {
+                                                                               Type = GetType(syntax),
+                                                                               Name = GetName(syntax),
+                                                                               LocationSpan = new LocationSpan(syntax),
+                                                                               Span = new CharacterSpan(syntax),
+                                                                           };
 
         private static string GetName(SyntaxNode syntax)
         {
@@ -130,6 +138,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                 case EventDeclarationSyntax e: return e.Identifier.ValueText;
                 case FieldDeclarationSyntax f: return f.Declaration.Variables.First().Identifier.ValueText;
                 case AttributeListSyntax a: return a.Attributes.First().Name.ToString();
+                case EnumMemberDeclarationSyntax em: return em.Identifier.ValueText;
 
                 default:
                     return syntax.ChildNodes().First().ToString();
@@ -139,36 +148,39 @@ namespace MiKoSolutions.SemanticParsers.CSharp
         private static string GetType(SyntaxNode syntax)
         {
             var type = syntax.GetType();
+
             return TypeMapping.TryGetValue(type, out var result)
-                ? result
-                : type.Name;
+                    ? result
+                    : type.Name;
         }
 
         private static void AddChildren(Container container, SyntaxNode syntax)
         {
-            container.Children.AddRange(syntax.ChildNodes().Select(ParseNode).Where(_ => _ != null));
+            var children = syntax.ChildNodes().Select(ParseNode).Where(_ => _ != null);
+
+            container.Children.AddRange(children);
         }
 
-        /// <summary>
-        /// Creates a Document from a string through creating a project that contains it.
-        /// </summary>
+        /// <summary>Creates a Document from a string through creating a project that contains it.</summary>
         /// <param name="source">Classes in the form of a string.</param>
         /// <param name="language">The language the source code is in.</param>
         /// <returns>A Document created from the source string.</returns>
         private static Document CreateDocument(string source)
         {
             var projectName = typeof(Parser).Namespace + ".AdHoc.Project";
-            var projectId = ProjectId.CreateNewId(debugName: projectName);
+            var projectId = ProjectId.CreateNewId(projectName);
 
             var solution = new AdhocWorkspace().CurrentSolution
-                .AddProject(projectId, projectName, projectName, LanguageNames.CSharp)
-                .AddMetadataReference(projectId, CorlibReference);
+                                               .AddProject(projectId, projectName, projectName, LanguageNames.CSharp)
+                                               .AddMetadataReference(projectId, CorlibReference);
 
-            const string newFileName = "Parse.cs";
-            var documentId = DocumentId.CreateNewId(projectId, debugName: newFileName);
+            const string newFileName = "ParseData.cs";
+            var documentId = DocumentId.CreateNewId(projectId, newFileName);
             solution = solution.AddDocument(documentId, newFileName, SourceText.From(source));
 
-            return solution.GetProject(projectId).Documents.First();
+            var project = solution.GetProject(projectId);
+
+            return project.Documents.First();
         }
     }
 }

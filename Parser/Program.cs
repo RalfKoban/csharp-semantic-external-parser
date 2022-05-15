@@ -33,18 +33,21 @@ namespace MiKoSolutions.SemanticParsers.CSharp
             }
 
             var watch = Stopwatch.StartNew();
-            var gcWatch = Stopwatch.StartNew();
+
             while (true)
             {
                 var inputFile = await Console.In.ReadLineAsync();
-                if (inputFile == null || "end".Equals(inputFile, StringComparison.OrdinalIgnoreCase))
+
+                if (inputFile is null || "end".Equals(inputFile, StringComparison.OrdinalIgnoreCase))
                 {
                     // session is done
                     Tracer.Trace($"Terminating as session was ended (instance {InstanceId:B})");
+
                     return 0;
                 }
 
                 var encodingToUse = await Console.In.ReadLineAsync();
+
                 var outputFile = await Console.In.ReadLineAsync();
 
                 try
@@ -56,7 +59,6 @@ namespace MiKoSolutions.SemanticParsers.CSharp
 
                         // SystemFile.Copy(inputFile, $@"z:\{Path.GetFileName(inputFile)}", true);
 
-                        // we find a flavor here, as we want to support different main methods, based on file ending
                         var file = Parser.Parse(inputFile, encodingToUse);
 
                         using (var writer = SystemFile.CreateText(outputFile))
@@ -64,7 +66,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                             YamlWriter.Write(writer, file);
                         }
 
-                        parseErrors = file.ParsingErrorsDetected == true;
+                        parseErrors = file.ParsingErrorsDetected is true;
                         if (parseErrors)
                         {
                             var parsingError = file.ParsingErrors[0];

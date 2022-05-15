@@ -14,7 +14,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp.Yaml
         {
         }
 
-        private LineInfo(int lineNumber, int linePosition)
+        public LineInfo(int lineNumber, int linePosition)
         {
             LineNumber = lineNumber;
             LinePosition = linePosition;
