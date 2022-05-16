@@ -111,25 +111,35 @@ namespace MiKoSolutions.SemanticParsers.CSharp
             // TODO RKN: fix header span
             switch (syntax)
             {
-                case BaseNamespaceDeclarationSyntax ns: return new CharacterSpan(ns.Name);
                 case BaseTypeDeclarationSyntax t: return new CharacterSpan(t.GetFirstToken(), t.OpenBraceToken);
+                case NamespaceDeclarationSyntax ns: return new CharacterSpan(ns.GetFirstToken(), ns.OpenBraceToken);
+                case FileScopedNamespaceDeclarationSyntax ns: return new CharacterSpan(ns.GetFirstToken(), ns.SemicolonToken);
 
                 default:
-                    return new CharacterSpan();
+                    return CharacterSpan.None;
             }
         }
 
         private static CharacterSpan GetFooterSpan(SyntaxNode syntax)
         {
-            // TODO RKN: fix footer span
             switch (syntax)
             {
-                case NamespaceDeclarationSyntax ns: return new CharacterSpan(ns.CloseBraceToken);
-                case FileScopedNamespaceDeclarationSyntax ns: return new CharacterSpan(ns.SemicolonToken);
                 case BaseTypeDeclarationSyntax t: return new CharacterSpan(t.CloseBraceToken);
+                case NamespaceDeclarationSyntax ns: return new CharacterSpan(ns.CloseBraceToken);
+                case FileScopedNamespaceDeclarationSyntax ns:
+                {
+                    var last = ns.DescendantNodesAndTokensAndSelf().Last();
+                    if (last.HasTrailingTrivia)
+                    {
+                        // seems we have some trivia left, so this would be out footer (as anything else belongs to the other nodes)
+                        return new CharacterSpan(last.GetTrailingTrivia());
+                    }
 
+                    return CharacterSpan.None;
+                }
+                
                 default:
-                    return new CharacterSpan();
+                    return CharacterSpan.None;
             }
         }
     

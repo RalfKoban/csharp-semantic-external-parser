@@ -54,8 +54,11 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                     {
                         case NewLine:
                         {
-                            map.Insert(lineNumber++, new MapInfo(lineLength, count));
+                            map.Insert(lineNumber, new MapInfo(lineLength, count));
+                            
+                            lineNumber++;
                             lineLength = 0;
+
                             break;
                         }
 
@@ -74,8 +77,11 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                                 charPosToLineMap.Insert(count, new LineInfo(lineNumber, lineLength));
                             }
 
-                            map.Insert(lineNumber++, new MapInfo(lineLength, count));
+                            map.Insert(lineNumber, new MapInfo(lineLength, count));
+
+                            lineNumber++;
                             lineLength = 0;
+                            
                             break;
                         }
                     }

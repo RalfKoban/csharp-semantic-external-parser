@@ -2,17 +2,22 @@
 using System.Diagnostics;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace MiKoSolutions.SemanticParsers.CSharp.Yaml
 {
     [DebuggerDisplay("Start: {Start}, End: {End}")]
     public struct LocationSpan : IEquatable<LocationSpan>
     {
-        public LocationSpan(SyntaxNode node) : this(node.GetLocation().GetLineSpan())
+        public LocationSpan(SyntaxNode node) : this(FindStartLinePosition(node), FindEndPosition(node))
         {
         }
 
-        public LocationSpan(FileLinePositionSpan span) : this(new LineInfo(span.StartLinePosition), new LineInfo(span.EndLinePosition))
+        public LocationSpan(FileLinePositionSpan span) : this(span.StartLinePosition, span.EndLinePosition)
+        {
+        }
+
+        public LocationSpan(LinePosition start, LinePosition end) : this(new LineInfo(start), new LineInfo(end))
         {
         }
 
@@ -43,5 +48,27 @@ namespace MiKoSolutions.SemanticParsers.CSharp.Yaml
         }
 
         public override string ToString() => $"Start: {Start}, End: {End}";
+
+        private static LinePosition FindStartLinePosition(SyntaxNode node)
+        {
+            var span = node.HasLeadingTrivia
+                           ? node.GetLeadingTrivia().First().FullSpan
+                           : node.FullSpan;
+
+            var lineSpan = node.SyntaxTree.GetLineSpan(span);
+
+            return lineSpan.StartLinePosition;
+        }
+
+        private static LinePosition FindEndPosition(SyntaxNode node)
+        {
+            var span = node.HasTrailingTrivia
+                            ? node.GetTrailingTrivia().Last().FullSpan
+                            : node.FullSpan;
+
+            var lineSpan = node.SyntaxTree.GetLineSpan(new TextSpan(span.Start, span.Length - 1)); // we need to subtract 1 because otherwise Roslyn would report another line (which we do not want in the parser's context)
+
+            return lineSpan.EndLinePosition;
+        }
     }
 }
