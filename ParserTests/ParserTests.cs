@@ -443,6 +443,103 @@ var commandlineArgs = Environment.GetCommandLineArgs();
             Assert.That(file.FooterSpan, Is.EqualTo(new CharacterSpan(88, 89)), message);
         }
 
+        [Test]
+        public void Unparsable_file_content_gets_reported([Values("Blödsinn")] string contents)
+        {
+            SystemFile.WriteAllText(CodeFile, contents);
+
+            var file = Parser.Parse(CodeFile, "UTF-8");
+
+            var message = ToYaml(file);
+
+            Assert.That(file.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(1, 0), new LineInfo(1, contents.Length))), message);
+            Assert.That(file.FooterSpan, Is.EqualTo(CharacterSpan.None), message);
+            Assert.That(file.ParsingErrorsDetected, Is.True, message);
+        }
+
+        [Test]
+        public void Regions_are_part_of_nodes()
+        {
+            SystemFile.WriteAllText(CodeFile, @"
+using System;
+
+namespace Bla.Blablubb
+{
+    #region Classes
+
+    public class TestMe
+    {
+        #region Fields
+        #endregion
+
+        #region Public methods
+
+        public void DoSomething()
+        {
+        }
+
+        #endregion
+    }
+
+    #endregion
+}
+");
+
+            var file = Parser.Parse(CodeFile, "UTF-8");
+
+            var message = ToYaml(file);
+
+            Assert.That(file.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(1, 0), new LineInfo(24, 0))), message);
+            Assert.That(file.FooterSpan, Is.EqualTo(CharacterSpan.None), message);
+
+            var node = file.Descendants().OfType<Container>().First(_ => _.Type == TypeNames.ClassDeclaration);
+
+            Assert.That(node, Is.Not.Null, message);
+            Assert.That(node.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(6, 1), new LineInfo(20, 7))), message);
+            Assert.That(node.HeaderSpan, Is.EqualTo(new CharacterSpan(46, 100)), message);
+            Assert.That(node.FooterSpan, Is.EqualTo(new CharacterSpan(238, 266)), message);
+
+            var method = file.Descendants().OfType<TerminalNode>().First(_ => _.Type == TypeNames.MethodDeclaration);
+
+            Assert.That(method, Is.Not.Null, message);
+            Assert.That(method.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(10, 1), new LineInfo(17, 11))), message);
+            Assert.That(method.Span, Is.EqualTo(new CharacterSpan(101, 237)), message);
+        }
+
+        [Test]
+        public void Comments_are_part_of_methods()
+        {
+            SystemFile.WriteAllText(CodeFile, @"
+using System;
+
+namespace Bla.Blablubb
+{
+    public class TestMe
+    {
+        /// <summary>
+        /// Does something.
+        /// </summary>
+        public void DoSomething()
+        {
+        }
+    }
+}
+");
+
+            var file = Parser.Parse(CodeFile, "UTF-8");
+
+            var message = ToYaml(file);
+
+            Assert.That(file.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(1, 0), new LineInfo(16, 0))), message);
+            Assert.That(file.FooterSpan, Is.EqualTo(CharacterSpan.None), message);
+
+            var method = file.Descendants().OfType<TerminalNode>().First(_ => _.Type == TypeNames.MethodDeclaration);
+
+            Assert.That(method, Is.Not.Null, message);
+            Assert.That(method.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(8, 1), new LineInfo(13, 11))), message);
+            Assert.That(method.Span, Is.EqualTo(new CharacterSpan(78, 210)), message);
+        }
+
         private static string ToYaml(File file)
         {
             var sb = new StringBuilder();

@@ -29,6 +29,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                                                                                { typeof(FieldDeclarationSyntax), TypeNames.FieldDeclaration },
                                                                                { typeof(FileScopedNamespaceDeclarationSyntax), TypeNames.FileScopedNamespaceDeclaration },
                                                                                { typeof(GlobalStatementSyntax), TypeNames.GlobalStatement },
+                                                                               { typeof(IncompleteMemberSyntax), TypeNames.IncompleteMember },
                                                                                { typeof(IndexerDeclarationSyntax), TypeNames.IndexerDeclaration },
                                                                                { typeof(InterfaceDeclarationSyntax), TypeNames.InterfaceDeclaration },
                                                                                { typeof(MethodDeclarationSyntax), TypeNames.MethodDeclaration },
@@ -67,6 +68,13 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                            };
 
             AddChildren(file, rootNode);
+
+            // determine whether we have parsing errors
+            var parsingErrors = rootNode.DescendantNodes().OfType<IncompleteMemberSyntax>();
+            foreach (var parsingError in parsingErrors)
+            {
+                file.ParsingErrors.Add(new ParsingError { Location = new LineInfo(parsingError.GetLocation().GetLineSpan().StartLinePosition), ErrorMessage = "Incomplete code" });
+            }
 
             return file;
         }

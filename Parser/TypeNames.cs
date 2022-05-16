@@ -12,6 +12,7 @@
         public const string FieldDeclaration = "field";
         public const string FileScopedNamespaceDeclaration = "namespace";
         public const string GlobalStatement = "global statement";
+        public const string IncompleteMember = "<incomplete>";
         public const string IndexerDeclaration = "indexer";
         public const string InterfaceDeclaration = "interface";
         public const string MethodDeclaration = "method";
