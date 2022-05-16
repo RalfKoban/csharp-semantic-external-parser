@@ -85,7 +85,7 @@ namespace My.Namespace.For.Test
         [TestCase( true, 1, 1,  2, 15,   0,  16,  -1,  -1, TypeNames.UsingDirective, "System")]
         [TestCase( true, 3, 1,  3, 27,  17,  43,  -1,  -1, TypeNames.UsingDirective, "System.Collections")]
         [TestCase( true, 4, 1,  4, 35,  44,  78,  -1,  -1, TypeNames.UsingDirective, "System.Collections.Generic")]
-        [TestCase(false, 5, 1, 16,  3,  79, 114, 301, 302, TypeNames.FileScopedNamespaceDeclaration, "My.Namespace.For.Test")]
+        [TestCase(false, 5, 1, 16,  3,  79, 114, 301, 302, TypeNames.FileScopedNamespaceDeclaration, "My.Namespace.For.Test")] // TODO RKN what about footers, shouldn't it be 0,-1?
         [TestCase(false, 7, 1, 16,  3, 115, 141, 300, 302, TypeNames.ClassDeclaration, "MyClass")]
         [TestCase(true, 10, 1, 13,  7, 142, 219,  -1,  -1, TypeNames.MethodDeclaration, "DoSomething")]
         [TestCase(true, 14, 1, 15, 78, 220, 299,  -1,  -1, TypeNames.FieldDeclaration, "m_field")]
@@ -401,6 +401,46 @@ children:
                 Assert.That(disconnectMethod.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(7, 1), new LineInfo(11, 6))), message);
                 Assert.That(disconnectMethod.Span, Is.EqualTo(new CharacterSpan(108, 185)), message);
             });
+        }
+
+        [Test]
+        public void File_footer_gets_parsed()
+        {
+            SystemFile.WriteAllText(CodeFile, @"using System;
+
+namespace Bla
+{
+	
+}
+
+
+
+");
+
+            var file = Parser.Parse(CodeFile, "UTF-8");
+
+            var message = ToYaml(file);
+
+            Assert.That(file.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(1, 0), new LineInfo(10, 0))), message);
+            Assert.That(file.FooterSpan, Is.EqualTo(new CharacterSpan(41, 46)), message);
+        }
+
+        [Test]
+        public void Global_statement_syntax_gets_parsed()
+        {
+            SystemFile.WriteAllText(CodeFile, @"
+using System.Diagnostics;
+
+var commandlineArgs = Environment.GetCommandLineArgs();
+
+");
+
+            var file = Parser.Parse(CodeFile, "UTF-8");
+
+            var message = ToYaml(file);
+
+            Assert.That(file.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(1, 0), new LineInfo(6, 0))), message);
+            Assert.That(file.FooterSpan, Is.EqualTo(new CharacterSpan(88, 89)), message);
         }
 
         private static string ToYaml(File file)

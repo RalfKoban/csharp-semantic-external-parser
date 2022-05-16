@@ -11,6 +11,7 @@
         public const string EventFieldDeclaration = "event";
         public const string FieldDeclaration = "field";
         public const string FileScopedNamespaceDeclaration = "namespace";
+        public const string GlobalStatement = "global statement";
         public const string IndexerDeclaration = "indexer";
         public const string InterfaceDeclaration = "interface";
         public const string MethodDeclaration = "method";

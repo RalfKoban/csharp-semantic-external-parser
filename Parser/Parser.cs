@@ -28,6 +28,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                                                                                { typeof(EventFieldDeclarationSyntax), TypeNames.EventFieldDeclaration },
                                                                                { typeof(FieldDeclarationSyntax), TypeNames.FieldDeclaration },
                                                                                { typeof(FileScopedNamespaceDeclarationSyntax), TypeNames.FileScopedNamespaceDeclaration },
+                                                                               { typeof(GlobalStatementSyntax), TypeNames.GlobalStatement },
                                                                                { typeof(IndexerDeclarationSyntax), TypeNames.IndexerDeclaration },
                                                                                { typeof(InterfaceDeclarationSyntax), TypeNames.InterfaceDeclaration },
                                                                                { typeof(MethodDeclarationSyntax), TypeNames.MethodDeclaration },
@@ -61,8 +62,8 @@ namespace MiKoSolutions.SemanticParsers.CSharp
             var file = new File
                            {
                                Name = filePath,
-                               LocationSpan = new LocationSpan(new LineInfo(1, 0), new LineInfo(rootNode.GetLocation().GetLineSpan().EndLinePosition)), // line span always starts at 1,0
-                               FooterSpan = CharacterSpan.None, // there is no footer
+                               LocationSpan = GetLocationSpan(rootNode),
+                               FooterSpan = GetFooterSpan(rootNode),
                            };
 
             AddChildren(file, rootNode);
@@ -96,7 +97,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                                 {
                                     Type = GetType(syntax),
                                     Name = GetName(syntax),
-                                    LocationSpan = new LocationSpan(syntax),
+                                    LocationSpan = GetLocationSpan(syntax),
                                     HeaderSpan = GetHeaderSpan(syntax),
                                     FooterSpan = GetFooterSpan(syntax),
                                 };
@@ -106,9 +107,26 @@ namespace MiKoSolutions.SemanticParsers.CSharp
             return container;
         }
 
+        private static LocationSpan GetLocationSpan(SyntaxNode syntax)
+        {
+            switch (syntax)
+            {
+                case CompilationUnitSyntax unit:
+                {
+                    var start = new LineInfo(1, 0); // line span always starts at 1,0
+                    var end = new LineInfo(unit.GetLocation().GetLineSpan().EndLinePosition);
+
+                    return new LocationSpan(start, end);
+                }
+
+                default:
+                    return new LocationSpan(syntax);
+            }
+        }
+
+
         private static CharacterSpan GetHeaderSpan(SyntaxNode syntax)
         {
-            // TODO RKN: fix header span
             switch (syntax)
             {
                 case BaseTypeDeclarationSyntax t: return new CharacterSpan(t.GetFirstToken(), t.OpenBraceToken);
@@ -137,7 +155,18 @@ namespace MiKoSolutions.SemanticParsers.CSharp
 
                     return CharacterSpan.None;
                 }
-                
+
+                case CompilationUnitSyntax unit:
+                {
+                    // let's see if we have some whitespaces at the end of the file
+                    if (unit.EndOfFileToken.HasLeadingTrivia)
+                    {
+                        return new CharacterSpan(unit.EndOfFileToken.LeadingTrivia);
+                    }
+
+                    return CharacterSpan.None;
+                }
+
                 default:
                     return CharacterSpan.None;
             }
@@ -147,7 +176,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                                                                            {
                                                                                Type = GetType(syntax),
                                                                                Name = GetName(syntax),
-                                                                               LocationSpan = new LocationSpan(syntax),
+                                                                               LocationSpan = GetLocationSpan(syntax),
                                                                                Span = new CharacterSpan(syntax),
                                                                            };
 
