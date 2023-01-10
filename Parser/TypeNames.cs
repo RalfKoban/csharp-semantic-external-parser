@@ -18,6 +18,7 @@
         public const string MethodDeclaration = "method";
         public const string NamespaceDeclaration = "namespace";
         public const string PropertyDeclaration = "property";
+        public const string RecordDeclaration = "record";
         public const string StructDeclaration = "struct";
         public const string UsingDirective = "using";
     }

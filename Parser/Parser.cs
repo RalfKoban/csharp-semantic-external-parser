@@ -35,6 +35,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                                                                                { typeof(MethodDeclarationSyntax), TypeNames.MethodDeclaration },
                                                                                { typeof(NamespaceDeclarationSyntax), TypeNames.NamespaceDeclaration },
                                                                                { typeof(PropertyDeclarationSyntax), TypeNames.PropertyDeclaration },
+                                                                               { typeof(RecordDeclarationSyntax), TypeNames.RecordDeclaration },
                                                                                { typeof(StructDeclarationSyntax), TypeNames.StructDeclaration },
                                                                                { typeof(UsingDirectiveSyntax), TypeNames.UsingDirective },
                                                                            };
