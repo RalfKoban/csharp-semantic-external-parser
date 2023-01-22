@@ -20,8 +20,10 @@ namespace MiKoSolutions.SemanticParsers.CSharp
         private static readonly Dictionary<Type, string> TypeMapping = new Dictionary<Type, string>
                                                                            {
                                                                                { typeof(AttributeListSyntax), TypeNames.AttributeList },
+                                                                               { typeof(AttributeSyntax), TypeNames.Attribute },
                                                                                { typeof(ClassDeclarationSyntax), TypeNames.ClassDeclaration },
                                                                                { typeof(ConstructorDeclarationSyntax), TypeNames.ConstructorDeclaration },
+                                                                               { typeof(ConversionOperatorDeclarationSyntax), TypeNames.ConversionOperatorDeclaration },
                                                                                { typeof(EnumDeclarationSyntax), TypeNames.EnumDeclaration },
                                                                                { typeof(EnumMemberDeclarationSyntax), TypeNames.EnumMemberDeclaration },
                                                                                { typeof(EventDeclarationSyntax), TypeNames.EventDeclaration },
@@ -34,6 +36,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                                                                                { typeof(InterfaceDeclarationSyntax), TypeNames.InterfaceDeclaration },
                                                                                { typeof(MethodDeclarationSyntax), TypeNames.MethodDeclaration },
                                                                                { typeof(NamespaceDeclarationSyntax), TypeNames.NamespaceDeclaration },
+                                                                               { typeof(OperatorDeclarationSyntax), TypeNames.OperatorDeclaration },
                                                                                { typeof(PropertyDeclarationSyntax), TypeNames.PropertyDeclaration },
                                                                                { typeof(RecordDeclarationSyntax), TypeNames.RecordDeclaration },
                                                                                { typeof(StructDeclarationSyntax), TypeNames.StructDeclaration },
