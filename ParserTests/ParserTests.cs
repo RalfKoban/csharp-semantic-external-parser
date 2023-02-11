@@ -181,6 +181,30 @@ public class MyClass
         }
 
         [Test]
+        public void Record_with_primary_ctor_gets_parsed()
+        {
+            var file = Parser.ParseCore(@"
+namespace My.Namespace.For.Test;
+
+public sealed record MyRecord(int I);");
+
+            var message = ToYaml(file);
+
+            Assert.That(file.Children, Has.Count.EqualTo(1), message);
+
+            var namespaceNode = (Container)file.Children[0];
+
+            Assert.That(namespaceNode.Type, Is.EqualTo(TypeNames.NamespaceDeclaration), message);
+            Assert.That(namespaceNode.Children, Has.Count.EqualTo(1), message);
+
+            var recordDeclaration = (Container)namespaceNode.Children[0];
+
+            Assert.That(recordDeclaration.Type, Is.EqualTo(TypeNames.RecordDeclaration), message);
+
+            Assert.That(recordDeclaration.Children, Is.Empty, message);
+        }
+
+        [Test]
         public void Enum_gets_parsed()
         {
             var file = Parser.ParseCore(@"
@@ -538,6 +562,23 @@ namespace Bla.Blablubb
             Assert.That(method, Is.Not.Null, message);
             Assert.That(method.LocationSpan, Is.EqualTo(new LocationSpan(new LineInfo(8, 1), new LineInfo(13, 11))), message);
             Assert.That(method.Span, Is.EqualTo(new CharacterSpan(78, 210)), message);
+        }
+
+        [Ignore("Just for completenes tests")]
+        [Timeout(10 * 60 * 1000)]
+        public void DogFood_folder(string folderName)
+        {
+            var fileNames = Directory.EnumerateFiles(folderName, "*.cs", SearchOption.AllDirectories).ToList();
+
+            foreach (var fileName in fileNames)
+            {
+                var file = Parser.Parse(fileName, "UTF-8");
+
+                var message = ToYaml(file);
+
+                Assert.That(file, Is.Not.Null, message);
+                Assert.That(file.ParsingErrorsDetected, Is.False, message);
+            }
         }
 
         private static string ToYaml(File file)

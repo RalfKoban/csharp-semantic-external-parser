@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
@@ -141,7 +142,18 @@ namespace MiKoSolutions.SemanticParsers.CSharp
         {
             switch (syntax)
             {
-                case BaseTypeDeclarationSyntax t: return new CharacterSpan(t.GetFirstToken(), t.OpenBraceToken);
+                case BaseTypeDeclarationSyntax t:
+                {
+                    var endToken = t.OpenBraceToken;
+
+                    if (endToken.IsKind(SyntaxKind.None))
+                    {
+                        // record with primary ctor
+                        endToken = t.SemicolonToken;
+                    }
+
+                    return new CharacterSpan(t.GetFirstToken(), endToken);
+                }
                 case NamespaceDeclarationSyntax ns: return new CharacterSpan(ns.GetFirstToken(), ns.OpenBraceToken);
                 case FileScopedNamespaceDeclarationSyntax ns: return new CharacterSpan(ns.GetFirstToken(), ns.SemicolonToken);
 
@@ -154,7 +166,18 @@ namespace MiKoSolutions.SemanticParsers.CSharp
         {
             switch (syntax)
             {
-                case BaseTypeDeclarationSyntax t: return new CharacterSpan(t.CloseBraceToken);
+                case BaseTypeDeclarationSyntax t:
+                {
+                    var token = t.CloseBraceToken;
+
+                    if (token.IsKind(SyntaxKind.None))
+                    {
+                        // record with primary ctor
+                        token = t.SemicolonToken;
+                    }
+
+                    return new CharacterSpan(token);
+                }
                 case NamespaceDeclarationSyntax ns: return new CharacterSpan(ns.CloseBraceToken);
                 case FileScopedNamespaceDeclarationSyntax ns:
                 {
