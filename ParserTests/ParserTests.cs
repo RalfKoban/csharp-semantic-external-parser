@@ -197,11 +197,35 @@ public sealed record MyRecord(int I);");
             Assert.That(namespaceNode.Type, Is.EqualTo(TypeNames.NamespaceDeclaration), message);
             Assert.That(namespaceNode.Children, Has.Count.EqualTo(1), message);
 
-            var recordDeclaration = (Container)namespaceNode.Children[0];
+            var declaration = (Container)namespaceNode.Children[0];
 
-            Assert.That(recordDeclaration.Type, Is.EqualTo(TypeNames.RecordDeclaration), message);
+            Assert.That(declaration.Type, Is.EqualTo(TypeNames.RecordDeclaration), message);
+            Assert.That(declaration.Name, Is.EqualTo("MyRecord"), message);
 
-            Assert.That(recordDeclaration.Children, Is.Empty, message);
+            Assert.That(declaration.Children, Is.Empty, message);
+        }
+
+        [Test]
+        public void Delegate_declaration_gets_parsed()
+        {
+            var file = Parser.ParseCore(@"
+namespace My.Namespace.For.Test;
+
+delegate void MyDelegate(int i, int y);");
+
+            var message = ToYaml(file);
+
+            Assert.That(file.Children, Has.Count.EqualTo(1), message);
+
+            var namespaceNode = (Container)file.Children[0];
+
+            Assert.That(namespaceNode.Type, Is.EqualTo(TypeNames.NamespaceDeclaration), message);
+            Assert.That(namespaceNode.Children, Has.Count.EqualTo(1), message);
+
+            var declaration = (TerminalNode)namespaceNode.Children[0];
+
+            Assert.That(declaration.Type, Is.EqualTo(TypeNames.DelegateDeclaration), message);
+            Assert.That(declaration.Name, Is.EqualTo("MyDelegate"), message);
         }
 
         [Test]

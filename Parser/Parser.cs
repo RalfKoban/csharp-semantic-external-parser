@@ -25,6 +25,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                                                                                { typeof(ClassDeclarationSyntax), TypeNames.ClassDeclaration },
                                                                                { typeof(ConstructorDeclarationSyntax), TypeNames.ConstructorDeclaration },
                                                                                { typeof(ConversionOperatorDeclarationSyntax), TypeNames.ConversionOperatorDeclaration },
+                                                                               { typeof(DelegateDeclarationSyntax), TypeNames.DelegateDeclaration },
                                                                                { typeof(EnumDeclarationSyntax), TypeNames.EnumDeclaration },
                                                                                { typeof(EnumMemberDeclarationSyntax), TypeNames.EnumMemberDeclaration },
                                                                                { typeof(EventDeclarationSyntax), TypeNames.EventDeclaration },
@@ -223,6 +224,7 @@ namespace MiKoSolutions.SemanticParsers.CSharp
                 case BaseNamespaceDeclarationSyntax ns: return ns.Name.ToString();
                 case BaseTypeDeclarationSyntax t: return t.Identifier.ValueText;
                 case ConstructorDeclarationSyntax c: return c.Identifier.ValueText;
+                case DelegateDeclarationSyntax d: return d.Identifier.ValueText;
                 case MethodDeclarationSyntax m: return m.Identifier.ValueText;
                 case IndexerDeclarationSyntax i: return i.ThisKeyword.ValueText;
                 case PropertyDeclarationSyntax p: return p.Identifier.ValueText;

@@ -7,6 +7,7 @@
         public const string ClassDeclaration = "class";
         public const string ConstructorDeclaration = "constructor";
         public const string ConversionOperatorDeclaration = "conversion operator";
+        public const string DelegateDeclaration = "delegate";
         public const string EnumDeclaration = "enum";
         public const string EnumMemberDeclaration = "enum member";
         public const string EventDeclaration = "event";
